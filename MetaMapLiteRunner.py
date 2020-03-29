@@ -22,7 +22,7 @@ def processLine(line):
         fields=line.split('|')
         fname=fields[0]
         cui=fields[4]
-        preferfed=fields[3]
+        preferred=fields[3]
         triggerinfo=fields[6]
         trigsplit=triggerinfo.split("-")
         concept=trigsplit[0]
@@ -43,14 +43,33 @@ def filterCuis(processed,cuilist):
             filtered.append(p)
     return filtered
 
+
+# merge lines -  if line n+1 does not start with the file name, merge it together with previous line.
+def cleanLines(lines):
+    lines2=[]
+    filename=lines[0].split("|")[0] # get file name out of the first lien
+
+    lastline=lines[0]
+    for i in range(1,len(lines)):
+        line = lines[i]
+        if not line.startswith(filename):
+            lastline=lastline+line
+        else:
+            lines2.append(lastline)
+            lastline=line
+    return lines2
+
+
 # fname passed in is the base name.
 def processMMLOutput(fname,cuis=None):
 
     mminame =fname+".mmi"
     with open(mminame) as f:
         lines = [line.rstrip() for line in f]
+
+    lines2=cleanLines(lines)
         
-    processed=[processLine(l) for l in lines]
+    processed=[processLine(l) for l in lines2]
     
     filtered = processed
     if cuis is not None:
