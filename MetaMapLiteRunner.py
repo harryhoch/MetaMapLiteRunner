@@ -11,7 +11,7 @@ from pathlib import Path
 import shutil
 
 # Note - Metamap dir must be modified to reflect the location where MetaMapLite is installed.
-metamap_dir="../metamaplite"
+metamap_dir="../../../metamaplite"
 metamap_prog=metamap_dir+"/metamaplite.sh"
 indexdir=metamap_dir+"/data/ivf/2018ABascii/USAbase"
 indexarg= "--indexdir="+indexdir
@@ -20,7 +20,10 @@ indexarg= "--indexdir="+indexdir
 def processLine(line):
     try:
         fields=line.split('|')
-        (fname,dummy,score,preferred,cui,stypes,triggerinfo,dummy2,position,meshcodes,dummy3)=fields
+        fname=fields[0]
+        cui=fields[4]
+        preferfed=fields[3]
+        triggerinfo=fields[6]
         trigsplit=triggerinfo.split("-")
         concept=trigsplit[0]
         negation=trigsplit[-1]
