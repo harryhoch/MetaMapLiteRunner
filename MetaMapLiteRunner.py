@@ -78,7 +78,7 @@ def processMMLOutput(fname,cuis=None):
     outname=fname+".csv"
     # write to filtered
     with open(outname,'w') as out:
-        csv_out=csv.writer(out)
+        csv_out=csv.writer(out,delimiter="|")
         for row in processed:
             csv_out.writerow(row)
 

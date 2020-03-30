@@ -18,3 +18,5 @@ Each input file will create two output files:
 2. .csv is the simplified output
 
 Both should contain only codes and should therefore be de-identified.
+
+Note that although the extension is ".csv", the simplified output file is actually pipe deliminted.
