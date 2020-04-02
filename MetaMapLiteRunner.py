@@ -9,6 +9,9 @@ import os
 import getopt
 from pathlib import Path
 import shutil
+from  multiprocessing.pool import ThreadPool as Pool
+import multiprocessing as mp
+from functools import partial
 
 # Note - Metamap dir must be modified to reflect the location where MetaMapLite is installed.
 metamap_dir="../../../metamaplite"
@@ -42,6 +45,22 @@ def filterCuis(processed,cuilist):
         if cui in cuilist:
             filtered.append(p)
     return filtered
+
+def alreadyProcessed(f):
+    filename, file_extension = os.path.splitext(f)
+    mmifile = filename+".mmi"
+    csvfile = filename+".csv"
+    return Path.is_file(Path(mmifile)) and Path.is_file(Path(csvfile))
+
+# check files - remove from list if they have both a ".mmi" and a ".csv" file, 
+# indicating completed processing. 
+def filterCompleted(files):
+    filteredFiles=[]
+    for f in files:
+        if alreadyProcessed(f) == False:
+            print("adding .."+f+" to eligible file")
+            filteredFiles.append(f)
+    return filteredFiles
 
 
 # merge lines -  if line n+1 does not start with the file name, merge it together with previous line.
@@ -84,7 +103,7 @@ def processMMLOutput(fname,cuis=None):
 
 
 ## process each file
-def process(fname,logfile = None):
+def processFile(logfile,fname):
     try: 
         # metamap will process a file of form name.ext, and will spit out name.mmi
         filename, file_extension = os.path.splitext(fname)
@@ -100,17 +119,18 @@ def process(fname,logfile = None):
                 processMMLOutput(filename)
         elif logfile is not None:
             logfile.write("File not found: "+fname)
+        return 0
     except subprocess.CalledProcessError as e:
         if logfile is not None:
             logfile.write("Other failure: "+fname+"\n"+e.output)
-
+        return -1
 
 # main - get filenames and run...
 # will work with wildcards
 def main():
 
     argv=sys.argv[1:]
-    opts,args = getopt.getopt(argv,'l:')
+    opts,args = getopt.getopt(argv,'sl:')
     logfile= None
 
 
@@ -119,15 +139,31 @@ def main():
         print("Path error - cannot find metamap. Please adjust 'metamap_dir' variable")
         sys.exit(0)
 
+    singleThread=False
     for name,value in opts:
         if name=='-l':
             logfilename=value
             logfile = open(logfilename,'w')
+        elif name=='-s':
+            singleThread=True
 
-    for file in args:
-        process(file,logfile)
+    func=partial(processFile,logfile)
+
+    # filter files 
+    files = filterCompleted(args)
+    for f in files:
+        print(f)
+
+    if singleThread==True:
+        for file in files:
+            func(file)
+    else:
+        pool=Pool(mp.cpu_count()-1)
+        pool.map(func,files)
+        pool.close()
+
     if logfile:
-        logfile.close()
+            logfile.close()
 
 if __name__ == "__main__":
     main()
