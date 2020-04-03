@@ -14,7 +14,7 @@ import multiprocessing as mp
 from functools import partial
 
 # Note - Metamap dir must be modified to reflect the location where MetaMapLite is installed.
-metamap_dir="../../../metamaplite"
+metamap_dir="../metamaplite"
 metamap_prog=metamap_dir+"/metamaplite.sh"
 indexdir=metamap_dir+"/data/ivf/2018ABascii/USAbase"
 indexarg= "--indexdir="+indexdir
@@ -130,7 +130,7 @@ def processFile(logfile,fname):
 def main():
 
     argv=sys.argv[1:]
-    opts,args = getopt.getopt(argv,'sl:')
+    opts,args = getopt.getopt(argv,'sc:l:')
     logfile= None
 
 
@@ -139,6 +139,7 @@ def main():
         print("Path error - cannot find metamap. Please adjust 'metamap_dir' variable")
         sys.exit(0)
 
+    cpucount = None
     singleThread=False
     for name,value in opts:
         if name=='-l':
@@ -146,6 +147,8 @@ def main():
             logfile = open(logfilename,'w')
         elif name=='-s':
             singleThread=True
+        elif name=="-c":
+            cpucount = int(value)
 
     func=partial(processFile,logfile)
 
@@ -158,7 +161,14 @@ def main():
         for file in files:
             func(file)
     else:
-        pool=Pool(mp.cpu_count()-1)
+        maxcpus = mp.cpu_count()-1
+        if cpucount is None:
+            cpucount =maxcpus
+        if cpucount > maxcpus:
+            cpucount =maxcpus
+        print("Running MetaMapLite on "+str(cpucount)+" cpus")
+
+        pool=Pool(cpucount)
         pool.map(func,files)
         pool.close()
 
