@@ -17,7 +17,7 @@ import threading
 
 
 # Note - Metamap dir must be modified to reflect the location where MetaMapLite is installed.
-metamap_dir = "../public_mm_lite"
+metamap_dir = "./"
 # metamap_dir = "../metamaplite"
 
 metamap_prog = metamap_dir + "/metamaplite.sh"
@@ -210,10 +210,6 @@ def main():
     opts, args = getopt.getopt(argv, 'dsc:l:')
     logfile = None
 
-    # verify file.
-    if shutil.which(metamap_prog) is None:
-        print("Path error - cannot find metamap. Please adjust 'metamap_dir' variable")
-        sys.exit(0)
 
     stdin = False
     cpucount = None
@@ -228,6 +224,17 @@ def main():
             cpucount = int(value)
         elif name == "-d":
             stdin = True
+
+    # verify file.
+    if stdin:
+        if shutil.which(metamap_server_prog) is None:
+            print("Path error - cannot find metamapliteserver.sh. Please adjust 'metamap_dir' variable")
+            sys.exit(0)
+    else:
+        if shutil.which(metamap_prog) is None:
+            print("Path error - cannot find metamaplite.sh. Please adjust 'metamap_dir' variable")
+            sys.exit(0)
+
 
     # filter files
     files = filterCompleted(args)
